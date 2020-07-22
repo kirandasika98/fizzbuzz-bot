@@ -34,6 +34,7 @@ func main() {
 
 	// Register handlers for fizzbuzz
 	session.AddHandler(onMessageCreate)
+	session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
 
 	log.Println("connecting to discord servers")
 
@@ -52,11 +53,12 @@ func main() {
 }
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Printf("new message: %v", m)
 	// Ignore message if its from the bot
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+
+	log.Printf("new message: %v", m)
 
 	if strings.HasPrefix(m.Content, "!fizzbuzz") {
 		number, err := getFizzbuzzInput(m.Content)
@@ -64,14 +66,24 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Println("error while getting fizzbuzz input: ", err)
 		}
 		ans := fizzbuzz(number)
-		s.ChannelMessageSend(m.ChannelID, formatResponse(ans))
+		sentMsg, err := s.ChannelMessageSend(m.ChannelID, formatResponse(ans))
+		if err != nil {
+			log.Println("error while sending message: ", err)
+		}
+		addMessageReactions(s, sentMsg)
 	}
 
 }
 
+func addMessageReactions(s *discordgo.Session, msg *discordgo.Message) {
+	if err := s.MessageReactionAdd(msg.ChannelID, msg.ID, "✅"); err != nil {
+		log.Println("error while adding emoji reaction: ", err)
+	}
+}
+
 func getFizzbuzzInput(message string) (int, error) {
 	parts := validCommand.FindStringSubmatch(message)
-	if len(parts) > 2 {
+	if len(parts) == 0 || len(parts) > 2 {
 		return 0, errors.New("the input must match the following regex: " + fizzbuzzRegex)
 	}
 	num, err := strconv.Atoi(parts[1])
