@@ -20,7 +20,7 @@ var (
 	token         string
 	fizzbuzzRegex = "!([a-z]+)\\s(\\d+)"
 	validCommand  = regexp.MustCompile(fizzbuzzRegex)
-	helpfulErr    = "*Snap!* Looks like you must match this string pattern `" + fizzbuzzRegex + "`"
+	helpfulErr    = "**Snap!** Looks like you must match this string pattern `" + fizzbuzzRegex + "`"
 )
 
 func init() {
