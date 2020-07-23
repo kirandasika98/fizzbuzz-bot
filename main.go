@@ -16,9 +16,11 @@ import (
 )
 
 var (
+	validPrefixes = []string{"!fizzbuzz", "!fb"}
 	token         string
-	fizzbuzzRegex = "!fizzbuzz\\s(\\d+)"
+	fizzbuzzRegex = "!([a-z]+)\\s(\\d+)"
 	validCommand  = regexp.MustCompile(fizzbuzzRegex)
+	helpfulErr    = "*Snap!* Looks like you must match this string pattern `" + fizzbuzzRegex + "`"
 )
 
 func init() {
@@ -60,10 +62,13 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	log.Printf("new message: %v", m)
 
-	if strings.HasPrefix(m.Content, "!fizzbuzz") {
+	if isFizzbuzz(m.Content) {
 		number, err := getFizzbuzzInput(m.Content)
 		if err != nil {
 			log.Println("error while getting fizzbuzz input: ", err)
+			// send a helpful message back to the user
+			s.ChannelMessageSend(m.ChannelID, helpfulErr)
+			return
 		}
 		ans := fizzbuzz(number)
 		sentMsg, err := s.ChannelMessageSend(m.ChannelID, formatResponse(ans))
@@ -75,6 +80,15 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
+func isFizzbuzz(content string) bool {
+	for _, p := range validPrefixes {
+		if strings.HasPrefix(content, p) {
+			return true
+		}
+	}
+	return false
+}
+
 func addMessageReactions(s *discordgo.Session, msg *discordgo.Message) {
 	if err := s.MessageReactionAdd(msg.ChannelID, msg.ID, "✅"); err != nil {
 		log.Println("error while adding emoji reaction: ", err)
@@ -83,10 +97,10 @@ func addMessageReactions(s *discordgo.Session, msg *discordgo.Message) {
 
 func getFizzbuzzInput(message string) (int, error) {
 	parts := validCommand.FindStringSubmatch(message)
-	if len(parts) == 0 || len(parts) > 2 {
+	if len(parts) == 0 || len(parts) > 3 {
 		return 0, errors.New("the input must match the following regex: " + fizzbuzzRegex)
 	}
-	num, err := strconv.Atoi(parts[1])
+	num, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return 0, errors.New("the input must match the following regex: " + fizzbuzzRegex)
 	}
