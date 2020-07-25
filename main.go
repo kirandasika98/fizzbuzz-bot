@@ -71,11 +71,11 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		ans := fizzbuzz(number)
-		sentMsg, err := s.ChannelMessageSend(m.ChannelID, formatResponse(ans))
+		_, err = s.ChannelMessageSend(m.ChannelID, formatResponse(ans))
 		if err != nil {
 			log.Println("error while sending message: ", err)
 		}
-		addMessageReactions(s, sentMsg)
+		addMessageReactions(s, m.ChannelID, m.ID)
 	}
 
 }
@@ -89,8 +89,8 @@ func isFizzbuzz(content string) bool {
 	return false
 }
 
-func addMessageReactions(s *discordgo.Session, msg *discordgo.Message) {
-	if err := s.MessageReactionAdd(msg.ChannelID, msg.ID, "✅"); err != nil {
+func addMessageReactions(s *discordgo.Session, channelID, messageID string) {
+	if err := s.MessageReactionAdd(channelID, messageID, "✅"); err != nil {
 		log.Println("error while adding emoji reaction: ", err)
 	}
 }

@@ -1,0 +1,12 @@
+[Unit]
+Description=fizzbuzzer service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/fizzbuzzer --token [bot_token]
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
